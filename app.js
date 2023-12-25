@@ -13,9 +13,15 @@ function chart(canvas, data) {
 	canvas.width = DPI_WIDTH;
 	canvas.height = DPI_HEIGHT;
 
+
+	const [yMin, yMax] = computeBoundaties(data)
+	const yRatio = VIEW_HEIGHT / (yMax - yMin)
+
+	console.log(yMin, yMax)
 	//==== y axis\
 
 	const step = VIEW_HEIGHT / ROWS_COUNT;
+	const textStep = (yMax - yMin) / ROWS_COUNT
 
 	ctx.beginPath();
 	ctx.strokeStyle = '#bbb';
@@ -24,8 +30,9 @@ function chart(canvas, data) {
 
 	for (let i = 1; i <= ROWS_COUNT; i++) {
 		const y = step * i;
-		ctx.fillText(DPI_HEIGHT - y, 5, y - 10);
-		ctx.moveTo(0, y + PADDING);
+		const text = yMax - textStep * i 
+		ctx.fillText(text.toString(), 5, y + PADDING- 10);
+		ctx.moveTo(0 , y + PADDING);
 		ctx.lineTo(DPI_WIDTH, y + PADDING);
 	}
 	ctx.stroke();
@@ -36,7 +43,7 @@ function chart(canvas, data) {
 	ctx.lineWidth = 4;
 	ctx.strokeStyle = 'green';
 	for (const [x, y] of data) {
-		ctx.lineTo(x, DPI_HEIGHT - y);
+		ctx.lineTo(x, DPI_HEIGHT - PADDING - y * yRatio);
 	}
 	ctx.stroke();
 	ctx.closePath();
@@ -50,3 +57,21 @@ chart(document.getElementById('chart'), [
 	[800, 50],
 	[1000, 350],
 ]);
+
+
+
+function computeBoundaties(data){
+	let min
+	let max 
+	
+	for(const [, y] of data){
+		if (typeof min !== 'number') min = y
+		if (typeof max !== 'number') max = y
+
+
+		if(min > y ) min = y
+		if(max < y ) max = y
+	}
+
+	return [min, max]
+}
