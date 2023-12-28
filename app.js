@@ -65,7 +65,7 @@ function line(ctx, coords, {color}) {
 	ctx.lineWidth = 4;
 	ctx.strokeStyle = color;
 	for (const [x, y] of coords) {
-		// ctx.lineTo(x, DPI_HEIGHT - PADDING - y * yRatio);
+		
 		ctx.lineTo(x, y);
 	}
 	ctx.stroke();
