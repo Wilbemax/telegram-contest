@@ -17,14 +17,30 @@ function chart(canvas, data) {
 
 	const [yMin, yMax] = computeBoundaties(data);
 
-	console.log(yMin, yMax);
+	yAxis(ctx, yMin, yMax);
 
 	const yRatio = VIEW_HEIGHT / (yMax - yMin);
 	const xRatio = VIEW_WIDTH / (data.columns[0].length - 2);
 
-	console.log(yMin, yMax);
-	//==== y axis\
+	const yData = data.columns.filter((col) => data.types[col[0]] === 'line');
 
+	yData.map(toCoords(xRatio, yRatio)).forEach((coords, idx) => {
+		const color = data.colors[yData[idx][0]];
+		line(ctx, coords, { color });
+	});
+}
+
+function toCoords(xRatio, yRatio) {
+	return (col) =>
+		col
+			.map((y, i) => [
+				Math.floor((i - 1) * xRatio),
+				Math.floor(DPI_HEIGHT - PADDING - y * yRatio),
+			])
+			.filter((_, i) => i !== 0);
+}
+
+function yAxis(ctx, yMin, yMax) {
 	const step = VIEW_HEIGHT / ROWS_COUNT;
 	const textStep = (yMax - yMin) / ROWS_COUNT;
 
@@ -42,30 +58,13 @@ function chart(canvas, data) {
 	}
 	ctx.stroke();
 	ctx.closePath();
-	//====
-
-	data.columns.forEach((col) => {
-		const name = col[0];
-		if (data.types[name] === 'line') {
-			const coords = col.map((y, i) => [
-				Math.floor((i - 1) * xRatio),
-				Math.floor(DPI_HEIGHT - PADDING - y * yRatio),
-			])
-			.filter((_, i) => i !== 0)
-			
-			const color = data.colors[name]
-
-			line(ctx,coords, {color})
-		}
-	});
 }
 
-function line(ctx, coords, {color}) {
+function line(ctx, coords, { color }) {
 	ctx.beginPath();
 	ctx.lineWidth = 4;
 	ctx.strokeStyle = color;
 	for (const [x, y] of coords) {
-		
 		ctx.lineTo(x, y);
 	}
 	ctx.stroke();
