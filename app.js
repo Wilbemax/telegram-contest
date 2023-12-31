@@ -30,8 +30,11 @@ function chart(canvas, data) {
 	);
 
 	function mousemove({ clientX, clientY }) {
+
+		const {left} = canvas.getBoundingClientRect();
+
 		proxy.mouse = {
-			x: clientX,
+			x: (clientX - left) * 2
 		};
 	}
 
@@ -55,7 +58,7 @@ function chart(canvas, data) {
 
 		//рисование
 		yAxis(ctx, yMin, yMax);
-		xAxis(ctx, xData, xRatio);
+		xAxis(ctx, xData, xRatio, proxy);
 
 		yData.map(toCoords(xRatio, yRatio)).forEach((coords, idx) => {
 			const color = data.colors[yData[idx][0]];
@@ -95,7 +98,7 @@ function yAxis(ctx, yMin, yMax) {
 
 	for (let i = 1; i <= ROWS_COUNT; i++) {
 		const y = step * i;
-		ctx.lineWidth = 1
+		ctx.lineWidth = 1;
 		const text = Math.round(yMax - textStep * i);
 		ctx.fillText(text.toString(), 5, y + PADDING - 10);
 		ctx.moveTo(0, y + PADDING);
@@ -105,17 +108,29 @@ function yAxis(ctx, yMin, yMax) {
 	ctx.closePath();
 }
 
-function xAxis(ctx, data, xRatio) {
+function xAxis(ctx, data, xRatio, {mouse}) {
 	const colsCount = 6;
 	const step = Math.round(data.length / colsCount);
 
 	ctx.beginPath();
-	for (let i = 1; i < data.length; i += step) {
-		const text = toDate(data[i]);
+	for (let i = 1; i < data.length; i++) {
 		const x = i * xRatio;
-		ctx.fillText(text.toString(), x, DPI_HEIGHT - 10);
-	}
+		if (i % step === 0) {
+			const text = toDate(data[i]);
+			ctx.fillText(text.toString(), x, DPI_HEIGHT - 10);
+		}
 
+		if( isOver(mouse, x, data.length) ){
+			ctx.save()
+
+			ctx.moveTo(x, PADDING)
+			ctx.lineTo(x, DPI_WIDTH - PADDING)
+
+			ctx.restore()
+		}
+
+	}
+	ctx.stroke()
 	ctx.closePath();
 }
 
@@ -539,4 +554,13 @@ function toDate(timestamp) {
 	// const shortDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 	const date = new Date(timestamp);
 	return `${shortMonth[date.getMonth()]} ${date.getDate()}`;
+}
+
+function isOver(mouse, x, length) {
+	if (!mouse) {
+		return false;
+	}
+
+	const width = DPI_WIDTH / length;
+	return Math.abs(x - mouse.x) < width / 2;
 }
