@@ -6,6 +6,8 @@ const DPI_HEIGHT = HEIGHT * 2;
 const VIEW_HEIGHT = DPI_HEIGHT - PADDING * 2;
 const ROWS_COUNT = 5;
 const VIEW_WIDTH = DPI_WIDTH;
+const tgChart = chart(document.getElementById('chart'), getChartData());
+tgChart.init();
 
 function chart(canvas, data) {
 	//console.log(data);
@@ -28,16 +30,19 @@ function chart(canvas, data) {
 	);
 
 	function mousemove({ clientX, clientY }) {
-		console.log(clientX);
 		proxy.mouse = {
 			x: clientX,
 		};
 	}
 
-	
 	canvas.addEventListener('mousemove', mousemove);
 
+	function clear() {
+		ctx.clearRect(0, 0, DPI_WIDTH, DPI_HEIGHT);
+	}
+
 	function paint() {
+		clear();
 		const [yMin, yMax] = computeBoundaties(data);
 
 		const yRatio = VIEW_HEIGHT / (yMax - yMin);
@@ -59,8 +64,11 @@ function chart(canvas, data) {
 	}
 
 	return {
+		init() {
+			paint();
+		},
 		destroy() {
-			cancelAnimationFrame(rfa)
+			cancelAnimationFrame(rfa);
 			canvas.removeEventListener('mousemove', mousemove);
 		},
 	};
@@ -87,6 +95,7 @@ function yAxis(ctx, yMin, yMax) {
 
 	for (let i = 1; i <= ROWS_COUNT; i++) {
 		const y = step * i;
+		ctx.lineWidth = 1
 		const text = Math.round(yMax - textStep * i);
 		ctx.fillText(text.toString(), 5, y + PADDING - 10);
 		ctx.moveTo(0, y + PADDING);
@@ -120,8 +129,6 @@ function line(ctx, coords, { color }) {
 	ctx.stroke();
 	ctx.closePath();
 }
-
-chart(document.getElementById('chart'), getChartData());
 
 function computeBoundaties({ columns, types }) {
 	let min;
