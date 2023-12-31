@@ -8,31 +8,62 @@ const ROWS_COUNT = 5;
 const VIEW_WIDTH = DPI_WIDTH;
 
 function chart(canvas, data) {
-	console.log(data);
+	//console.log(data);
+	let raf;
 	const ctx = canvas.getContext('2d');
 	canvas.style.width = WIDHT + 'px';
 	canvas.style.height = HEIGHT + 'px';
 	canvas.width = DPI_WIDTH;
 	canvas.height = DPI_HEIGHT;
 
-	const [yMin, yMax] = computeBoundaties(data);
+	const proxy = new Proxy(
+		{},
+		{
+			set(...args) {
+				const result = Reflect.set(...args);
+				raf = requestAnimationFrame(paint);
+				return result;
+			},
+		}
+	);
 
-	const yRatio = VIEW_HEIGHT / (yMax - yMin);
-	const xRatio = VIEW_WIDTH / (data.columns[0].length - 2);
+	function mousemove({ clientX, clientY }) {
+		console.log(clientX);
+		proxy.mouse = {
+			x: clientX,
+		};
+	}
 
-	const yData = data.columns.filter((col) => data.types[col[0]] === 'line');
-	const xData = data.columns.filter((col) => data.types[col[0]] !== 'line')[0];
+	
+	canvas.addEventListener('mousemove', mousemove);
 
-	console.log(xData);
+	function paint() {
+		const [yMin, yMax] = computeBoundaties(data);
 
-	//рисование
-	yAxis(ctx, yMin, yMax);
-	xAxis(ctx, xData, xRatio);
+		const yRatio = VIEW_HEIGHT / (yMax - yMin);
+		const xRatio = VIEW_WIDTH / (data.columns[0].length - 2);
 
-	yData.map(toCoords(xRatio, yRatio)).forEach((coords, idx) => {
-		const color = data.colors[yData[idx][0]];
-		line(ctx, coords, { color });
-	});
+		const yData = data.columns.filter((col) => data.types[col[0]] === 'line');
+		const xData = data.columns.filter(
+			(col) => data.types[col[0]] !== 'line'
+		)[0];
+
+		//рисование
+		yAxis(ctx, yMin, yMax);
+		xAxis(ctx, xData, xRatio);
+
+		yData.map(toCoords(xRatio, yRatio)).forEach((coords, idx) => {
+			const color = data.colors[yData[idx][0]];
+			line(ctx, coords, { color });
+		});
+	}
+
+	return {
+		destroy() {
+			cancelAnimationFrame(rfa)
+			canvas.removeEventListener('mousemove', mousemove);
+		},
+	};
 }
 
 function toCoords(xRatio, yRatio) {
@@ -74,7 +105,6 @@ function xAxis(ctx, data, xRatio) {
 		const text = toDate(data[i]);
 		const x = i * xRatio;
 		ctx.fillText(text.toString(), x, DPI_HEIGHT - 10);
-		console.log(text);
 	}
 
 	ctx.closePath();
@@ -500,6 +530,6 @@ function toDate(timestamp) {
 		'Dec',
 	];
 	// const shortDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-	const date =  new Date(timestamp)
-	return `${shortMonth[date.getMonth()]} ${date.getDate()}`
+	const date = new Date(timestamp);
+	return `${shortMonth[date.getMonth()]} ${date.getDate()}`;
 }
