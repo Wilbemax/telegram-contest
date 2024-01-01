@@ -6,6 +6,8 @@ const DPI_HEIGHT = HEIGHT * 2;
 const VIEW_HEIGHT = DPI_HEIGHT - PADDING * 2;
 const ROWS_COUNT = 5;
 const VIEW_WIDTH = DPI_WIDTH;
+const CIRCLE_RADIUS = 10
+
 const tgChart = chart(document.getElementById('chart'), getChartData());
 tgChart.init();
 
@@ -30,15 +32,19 @@ function chart(canvas, data) {
 	);
 
 	function mousemove({ clientX, clientY }) {
-
-		const {left} = canvas.getBoundingClientRect();
+		const { left } = canvas.getBoundingClientRect();
 
 		proxy.mouse = {
-			x: (clientX - left) * 2
+			x: (clientX - left) * 2,
 		};
 	}
 
+	function mouseleave() {
+		proxy.mouse = null;
+	}
+
 	canvas.addEventListener('mousemove', mousemove);
+	canvas.addEventListener('mouseleave', mouseleave);
 
 	function clear() {
 		ctx.clearRect(0, 0, DPI_WIDTH, DPI_HEIGHT);
@@ -63,6 +69,12 @@ function chart(canvas, data) {
 		yData.map(toCoords(xRatio, yRatio)).forEach((coords, idx) => {
 			const color = data.colors[yData[idx][0]];
 			line(ctx, coords, { color });
+
+			for (const [x, y] of coords) {
+				if (isOver(proxy.mouse, x, coords.length)) {
+					circle(ctx, [x, y], {color});
+				}
+			}
 		});
 	}
 
@@ -73,6 +85,7 @@ function chart(canvas, data) {
 		destroy() {
 			cancelAnimationFrame(rfa);
 			canvas.removeEventListener('mousemove', mousemove);
+			canvas.removeEventListener('mouseleave', mouseleave);
 		},
 	};
 }
@@ -108,7 +121,7 @@ function yAxis(ctx, yMin, yMax) {
 	ctx.closePath();
 }
 
-function xAxis(ctx, data, xRatio, {mouse}) {
+function xAxis(ctx, data, xRatio, { mouse }) {
 	const colsCount = 6;
 	const step = Math.round(data.length / colsCount);
 
@@ -120,17 +133,16 @@ function xAxis(ctx, data, xRatio, {mouse}) {
 			ctx.fillText(text.toString(), x, DPI_HEIGHT - 10);
 		}
 
-		if( isOver(mouse, x, data.length) ){
-			ctx.save()
+		if (isOver(mouse, x, data.length)) {
+			ctx.save();
 
-			ctx.moveTo(x, PADDING)
-			ctx.lineTo(x, DPI_HEIGHT - PADDING)
+			ctx.moveTo(x, PADDING);
+			ctx.lineTo(x, DPI_HEIGHT - PADDING);
 
-			ctx.restore()
+			ctx.restore();
 		}
-
 	}
-	ctx.stroke()
+	ctx.stroke();
 	ctx.closePath();
 }
 
@@ -141,6 +153,15 @@ function line(ctx, coords, { color }) {
 	for (const [x, y] of coords) {
 		ctx.lineTo(x, y);
 	}
+	ctx.stroke();
+	ctx.closePath();
+}
+function circle(ctx, [x, y], { color }) {
+	ctx.beginPath();
+	ctx.strokeStyle = color;
+	ctx.fillStyle = '#fff';
+	ctx.arc(x, y, CIRCLE_RADIUS, 0, Math.PI * 2);
+	ctx.fill();
 	ctx.stroke();
 	ctx.closePath();
 }
