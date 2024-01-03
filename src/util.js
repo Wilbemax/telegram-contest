@@ -72,3 +72,8 @@ export function computeBoundaties({ columns, types }) {
 
 	return [min, max];
 }
+
+
+export function css(el) {
+	
+}
