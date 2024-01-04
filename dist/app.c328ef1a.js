@@ -411,7 +411,7 @@ function chart(root, data) {
 
     //рисование
     yAxis(yMin, yMax);
-    xAxis(xData, xRatio);
+    xAxis(xData, yData, xRatio);
     yData.map(toCoords(xRatio, yRatio)).forEach(function (coords, idx) {
       var color = data.colors[yData[idx][0]];
       (0, _util.line)(ctx, coords, {
@@ -437,11 +437,11 @@ function chart(root, data) {
       }
     });
   }
-  function xAxis(xData, xRatio) {
+  function xAxis(xData, yData, xRatio) {
     var colsCount = 6;
     var step = Math.round(xData.length / colsCount);
     ctx.beginPath();
-    for (var i = 1; i < xData.length; i++) {
+    var _loop = function _loop(i) {
       var x = i * xRatio;
       if (i % step === 0) {
         var text = (0, _util.toDate)(xData[i]);
@@ -453,10 +453,19 @@ function chart(root, data) {
         ctx.lineTo(x, DPI_HEIGHT - PADDING);
         tip.show(proxy.mouse.tooltip, {
           title: (0, _util.toDate)(xData[i]),
-          items: []
+          items: yData.map(function (col) {
+            return {
+              color: data.colors[col[0]],
+              name: data.names[col[0]],
+              value: col[i + 1]
+            };
+          })
         });
         ctx.restore();
       }
+    };
+    for (var i = 1; i < xData.length; i++) {
+      _loop(i);
     }
     ctx.stroke();
     ctx.closePath();

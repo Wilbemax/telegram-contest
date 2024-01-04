@@ -38,20 +38,20 @@ export function chart(root, data) {
 	);
 
 	function mousemove({ clientX, clientY }) {
-		const { left,top } = canvas.getBoundingClientRect();
+		const { left, top } = canvas.getBoundingClientRect();
 
 		proxy.mouse = {
 			x: (clientX - left) * 2,
 			tooltip: {
 				left: clientX - left,
 				top: clientY - top,
-			}
+			},
 		};
 	}
 
 	function mouseleave() {
 		proxy.mouse = null;
-		tip.hiden()
+		tip.hiden();
 	}
 
 	canvas.addEventListener('mousemove', mousemove);
@@ -59,7 +59,6 @@ export function chart(root, data) {
 
 	function clear() {
 		ctx.clearRect(0, 0, DPI_WIDTH, DPI_HEIGHT);
-		
 	}
 
 	function paint() {
@@ -76,7 +75,7 @@ export function chart(root, data) {
 
 		//рисование
 		yAxis(yMin, yMax);
-		xAxis(xData, xRatio);
+		xAxis(xData, yData, xRatio);
 
 		yData.map(toCoords(xRatio, yRatio)).forEach((coords, idx) => {
 			const color = data.colors[yData[idx][0]];
@@ -90,7 +89,7 @@ export function chart(root, data) {
 		});
 	}
 
-	function xAxis(xData, xRatio) {
+	function xAxis(xData, yData, xRatio) {
 		const colsCount = 6;
 		const step = Math.round(xData.length / colsCount);
 
@@ -108,10 +107,14 @@ export function chart(root, data) {
 				ctx.moveTo(x, PADDING);
 				ctx.lineTo(x, DPI_HEIGHT - PADDING);
 
-				tip.show(proxy.mouse.tooltip,{
-					title : toDate(xData[i]),
-					items : []
-				})
+				tip.show(proxy.mouse.tooltip, {
+					title: toDate(xData[i]),
+					items: yData.map((col) => ({
+						color: data.colors[col[0]],
+						name: data.names[col[0]],
+						value: col[i + 1],
+					})),
+				});
 
 				ctx.restore();
 			}
