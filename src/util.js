@@ -77,3 +77,14 @@ export function computeBoundaties({ columns, types }) {
 export function css(el, style = {}) {
 	Object.assign(el.style, style)
 }
+
+
+export function toCoords(xRatio, yRatio, DPI_HEIGHT, PADDING) {
+	return (col) =>
+		col
+			.map((y, i) => [
+				Math.floor((i - 1) * xRatio),
+				Math.floor(DPI_HEIGHT - PADDING - y * yRatio),
+			])
+			.filter((_, i) => i !== 0);
+}
