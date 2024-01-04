@@ -74,6 +74,6 @@ export function computeBoundaties({ columns, types }) {
 }
 
 
-export function css(el) {
-	
+export function css(el, style = {}) {
+	Object.assign(el.style, style)
 }

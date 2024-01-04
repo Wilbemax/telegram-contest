@@ -284,8 +284,50 @@ function computeBoundaties(_ref5) {
   });
   return [min, max];
 }
-function css(el) {}
-},{}],"chart.js":[function(require,module,exports) {
+function css(el) {
+  var style = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  Object.assign(el.style, style);
+}
+},{}],"tooltip.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.tooltip = tooltip;
+var _util = require("./util");
+var template = function template(data) {
+  return "\n    <div class='tooltip-title '>".concat(data.title, "</div>\n    <ul class='tooltip-list'>\n    ").concat(data.items.map(function (item) {
+    return "<li class=\"tooltip-list-item\">\n                    <div class='value' style='color:".concat(item.color, "'>").concat(item.value, "</div>                    <div class='name' style='color:").concat(item.color, "'>").concat(item.name, "</div>\n                        </li>");
+  }).join('\n'), "\n    \n    </ul>");
+};
+function tooltip(el) {
+  var clear = function clear() {
+    return el.innerHTML = '';
+  };
+  return {
+    show: function show(_ref, data) {
+      var left = _ref.left,
+        top = _ref.top;
+      clear();
+      var _el$getBoundingClient = el.getBoundingClientRect(),
+        height = _el$getBoundingClient.height,
+        width = _el$getBoundingClient.width;
+      (0, _util.css)(el, {
+        display: 'block',
+        top: top - height + 'px',
+        left: left + width / 2 + 'px'
+      });
+      el.insertAdjacentHTML('afterbegin', template(data));
+    },
+    hiden: function hiden() {
+      (0, _util.css)(el, {
+        display: "none "
+      });
+    }
+  };
+}
+},{"./util":"util.js"}],"chart.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -293,6 +335,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.chart = chart;
 var _util = require("./util");
+var _tooltip = require("./tooltip");
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -309,12 +352,16 @@ var VIEW_HEIGHT = DPI_HEIGHT - PADDING * 2;
 var ROWS_COUNT = 5;
 var VIEW_WIDTH = DPI_WIDTH;
 var CIRCLE_RADIUS = 10;
-function chart(canvas, data) {
+function chart(root, data) {
   //console.log(data);
+  var canvas = root.querySelector('canvas');
+  var tip = (0, _tooltip.tooltip)(root.querySelector('[data-el="tooltip"]'));
   var raf;
   var ctx = canvas.getContext('2d');
-  canvas.style.width = WIDHT + 'px';
-  canvas.style.height = HEIGHT + 'px';
+  (0, _util.css)(canvas, {
+    width: WIDHT + 'px',
+    height: HEIGHT + 'px'
+  });
   canvas.width = DPI_WIDTH;
   canvas.height = DPI_HEIGHT;
   var proxy = new Proxy({}, {
@@ -328,13 +375,19 @@ function chart(canvas, data) {
     var clientX = _ref.clientX,
       clientY = _ref.clientY;
     var _canvas$getBoundingCl = canvas.getBoundingClientRect(),
-      left = _canvas$getBoundingCl.left;
+      left = _canvas$getBoundingCl.left,
+      top = _canvas$getBoundingCl.top;
     proxy.mouse = {
-      x: (clientX - left) * 2
+      x: (clientX - left) * 2,
+      tooltip: {
+        left: clientX - left,
+        top: clientY - top
+      }
     };
   }
   function mouseleave() {
     proxy.mouse = null;
+    tip.hiden();
   }
   canvas.addEventListener('mousemove', mousemove);
   canvas.addEventListener('mouseleave', mouseleave);
@@ -398,6 +451,10 @@ function chart(canvas, data) {
         ctx.save();
         ctx.moveTo(x, PADDING);
         ctx.lineTo(x, DPI_HEIGHT - PADDING);
+        tip.show(proxy.mouse.tooltip, {
+          title: (0, _util.toDate)(xData[i]),
+          items: []
+        });
         ctx.restore();
       }
     }
@@ -442,7 +499,7 @@ function toCoords(xRatio, yRatio) {
     });
   };
 }
-},{"./util":"util.js"}],"app.js":[function(require,module,exports) {
+},{"./util":"util.js","./tooltip":"tooltip.js"}],"app.js":[function(require,module,exports) {
 "use strict";
 
 require("./styles.scss");
@@ -475,7 +532,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58201" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51679" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];

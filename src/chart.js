@@ -1,5 +1,5 @@
-import { toDate, isOver, line, circle, computeBoundaties } from "./util";
-
+import { css, toDate, isOver, line, circle, computeBoundaties } from './util';
+import { tooltip } from './tooltip';
 
 const WIDHT = 600;
 const PADDING = 40;
@@ -9,15 +9,20 @@ const DPI_HEIGHT = HEIGHT * 2;
 const VIEW_HEIGHT = DPI_HEIGHT - PADDING * 2;
 const ROWS_COUNT = 5;
 const VIEW_WIDTH = DPI_WIDTH;
-const CIRCLE_RADIUS = 10
+const CIRCLE_RADIUS = 10;
 
-
-export function chart(canvas, data) {
+export function chart(root, data) {
 	//console.log(data);
+	const canvas = root.querySelector('canvas');
+	const tip = tooltip(root.querySelector('[data-el="tooltip"]'));
 	let raf;
 	const ctx = canvas.getContext('2d');
-	canvas.style.width = WIDHT + 'px';
-	canvas.style.height = HEIGHT + 'px';
+
+	css(canvas, {
+		width: WIDHT + 'px',
+		height: HEIGHT + 'px',
+	});
+
 	canvas.width = DPI_WIDTH;
 	canvas.height = DPI_HEIGHT;
 
@@ -33,15 +38,20 @@ export function chart(canvas, data) {
 	);
 
 	function mousemove({ clientX, clientY }) {
-		const { left } = canvas.getBoundingClientRect();
+		const { left,top } = canvas.getBoundingClientRect();
 
 		proxy.mouse = {
-			x: (clientX - left) *2,
+			x: (clientX - left) * 2,
+			tooltip: {
+				left: clientX - left,
+				top: clientY - top,
+			}
 		};
 	}
 
 	function mouseleave() {
 		proxy.mouse = null;
+		tip.hiden()
 	}
 
 	canvas.addEventListener('mousemove', mousemove);
@@ -49,6 +59,7 @@ export function chart(canvas, data) {
 
 	function clear() {
 		ctx.clearRect(0, 0, DPI_WIDTH, DPI_HEIGHT);
+		
 	}
 
 	function paint() {
@@ -64,8 +75,8 @@ export function chart(canvas, data) {
 		)[0];
 
 		//рисование
-		yAxis( yMin, yMax);
-		xAxis( xData, xRatio);
+		yAxis(yMin, yMax);
+		xAxis(xData, xRatio);
 
 		yData.map(toCoords(xRatio, yRatio)).forEach((coords, idx) => {
 			const color = data.colors[yData[idx][0]];
@@ -73,16 +84,16 @@ export function chart(canvas, data) {
 
 			for (const [x, y] of coords) {
 				if (isOver(proxy.mouse, x, coords.length, DPI_WIDTH)) {
-					circle(ctx, [x, y], {color}, CIRCLE_RADIUS);
+					circle(ctx, [x, y], { color }, CIRCLE_RADIUS);
 				}
 			}
 		});
 	}
 
-	function xAxis( xData, xRatio) {
+	function xAxis(xData, xRatio) {
 		const colsCount = 6;
 		const step = Math.round(xData.length / colsCount);
-	
+
 		ctx.beginPath();
 		for (let i = 1; i < xData.length; i++) {
 			const x = i * xRatio;
@@ -90,13 +101,18 @@ export function chart(canvas, data) {
 				const text = toDate(xData[i]);
 				ctx.fillText(text.toString(), x, DPI_HEIGHT - 10);
 			}
-	
+
 			if (isOver(proxy.mouse, x, xData.length, DPI_WIDTH)) {
 				ctx.save();
-	
+
 				ctx.moveTo(x, PADDING);
 				ctx.lineTo(x, DPI_HEIGHT - PADDING);
-	
+
+				tip.show(proxy.mouse.tooltip,{
+					title : toDate(xData[i]),
+					items : []
+				})
+
 				ctx.restore();
 			}
 		}
@@ -104,15 +120,15 @@ export function chart(canvas, data) {
 		ctx.closePath();
 	}
 
-	function yAxis( yMin, yMax) {
+	function yAxis(yMin, yMax) {
 		const step = VIEW_HEIGHT / ROWS_COUNT;
 		const textStep = (yMax - yMin) / ROWS_COUNT;
-	
+
 		ctx.beginPath();
 		ctx.strokeStyle = '#bbb';
 		ctx.font = 'normal 20px Helvetica, sans-serif';
 		ctx.fillStyle = '#96a2aa';
-	
+
 		for (let i = 1; i <= ROWS_COUNT; i++) {
 			const y = step * i;
 			ctx.lineWidth = 1;
@@ -124,7 +140,7 @@ export function chart(canvas, data) {
 		ctx.stroke();
 		ctx.closePath();
 	}
-	
+
 	return {
 		init() {
 			paint();
@@ -146,8 +162,3 @@ function toCoords(xRatio, yRatio) {
 			])
 			.filter((_, i) => i !== 0);
 }
-
-
-
-
-
