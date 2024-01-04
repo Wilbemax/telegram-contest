@@ -15,7 +15,7 @@ const CIRCLE_RADIUS = 10;
 export function chart(root, data) {
 	//console.log(data);
 	const canvas = root.querySelector('[data-el="main"');
-	const tip = tooltip(root.querySelector('[data-el="tooltip"]'));
+	const tip = tooltip(root.querySelector('[data-el="tooltip"]'), WIDHT);
 	const slider = sliderChart(root.querySelector('[data-el="slider"]'), data, DPI_WIDTH)
 	let raf;
 	const ctx = canvas.getContext('2d');

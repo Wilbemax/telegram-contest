@@ -311,7 +311,7 @@ var template = function template(data) {
     return "<li class=\"tooltip-list-item\">\n                    <div class='value' style='color:".concat(item.color, "'>").concat(item.value, "</div>                    <div class='name' style='color:").concat(item.color, "'>").concat(item.name, "</div>\n                        </li>");
   }).join('\n'), "\n    \n    </ul>");
 };
-function tooltip(el) {
+function tooltip(el, WIDHT) {
   var clear = function clear() {
     return el.innerHTML = '';
   };
@@ -323,16 +323,26 @@ function tooltip(el) {
       var _el$getBoundingClient = el.getBoundingClientRect(),
         height = _el$getBoundingClient.height,
         width = _el$getBoundingClient.width;
-      (0, _util.css)(el, {
-        display: 'block',
-        top: top - height + 'px',
-        left: left + width / 2 + 'px'
-      });
+      if (left < WIDHT / 2) {
+        console.log(true);
+        (0, _util.css)(el, {
+          display: 'block',
+          top: top - height + 'px',
+          left: left + width / 2 + 'px'
+        });
+      } else {
+        console.log(false);
+        (0, _util.css)(el, {
+          display: 'block',
+          top: top - height + 'px',
+          left: left - width * 1.5 + 'px'
+        });
+      }
       el.insertAdjacentHTML('afterbegin', template(data));
     },
     hiden: function hiden() {
       (0, _util.css)(el, {
-        display: "none "
+        display: 'none '
       });
     }
   };
@@ -355,12 +365,57 @@ var HEIGHT = 40;
 var DPI_HEIGHT = HEIGHT * 2;
 function sliderChart(root, data, DPI_WIDTH) {
   var WIDHT = DPI_WIDTH / 2;
+  var MIN_WIDTH = WIDHT * 0.05;
   var canvas = root.querySelector('canvas');
   var ctx = canvas.getContext('2d');
   (0, _util.css)(canvas, {
     width: WIDHT + 'px',
     height: HEIGHT + 'px'
   });
+  var $left = root.querySelector('[data-el="left"]');
+  var $window = root.querySelector('[data-el="window"]');
+  var $right = root.querySelector('[data-el="right"]');
+  var defaultWidth = WIDHT * 0.3;
+  setPosition(0, WIDHT - defaultWidth);
+  function setPosition(left, right) {
+    var windowWith = WIDHT - left - right;
+    console.log(left, right);
+    if (windowWith < MIN_WIDTH) {
+      (0, _util.css)($window, {
+        width: MIN_WIDTH + 'px'
+      });
+      return;
+    }
+    if (left < 0) {
+      (0, _util.css)($window, {
+        left: '0px'
+      });
+      (0, _util.css)($left, {
+        width: '0px'
+      });
+      return;
+    }
+    if (right < 0) {
+      (0, _util.css)($window, {
+        rigth: '0px'
+      });
+      (0, _util.css)($right, {
+        width: '0px'
+      });
+      return;
+    }
+    (0, _util.css)($window, {
+      width: windowWith + "px",
+      left: left + "px",
+      rigth: right + "px"
+    });
+    (0, _util.css)($left, {
+      width: left + 'px'
+    });
+    (0, _util.css)($right, {
+      width: right + 'px'
+    });
+  }
   canvas.width = DPI_WIDTH;
   canvas.height = DPI_HEIGHT;
   var _computeBoundaties = (0, _util.computeBoundaties)(data),
@@ -408,7 +463,7 @@ var CIRCLE_RADIUS = 10;
 function chart(root, data) {
   //console.log(data);
   var canvas = root.querySelector('[data-el="main"');
-  var tip = (0, _tooltip.tooltip)(root.querySelector('[data-el="tooltip"]'));
+  var tip = (0, _tooltip.tooltip)(root.querySelector('[data-el="tooltip"]'), WIDHT);
   var slider = (0, _slider.sliderChart)(root.querySelector('[data-el="slider"]'), data, DPI_WIDTH);
   var raf;
   var ctx = canvas.getContext('2d');

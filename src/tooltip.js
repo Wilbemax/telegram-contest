@@ -14,23 +14,32 @@ const template = (data) => `
     
     </ul>`;
 
-export function tooltip(el) {
+export function tooltip(el, WIDHT) {
 	const clear = () => (el.innerHTML = '');
 	return {
 		show({ left, top }, data) {
 			clear();
-            const {height, width} =  el.getBoundingClientRect();
-            css(el,{
-                display: 'block',
-                top: top - height + 'px',
-                left: left + width / 2 + 'px',
-            })
-
+			const { height, width } = el.getBoundingClientRect();
+			if (left < WIDHT / 2) {
+				console.log(true);
+				css(el, {
+					display: 'block',
+					top: top - height + 'px',
+					left: left + width / 2 + 'px',
+				});
+			} else {
+				console.log(false);
+				css(el, {
+					display: 'block',
+					top: top - height + 'px',
+					left: left - width * 1.5 + 'px',
+				});
+			}
 
 			el.insertAdjacentHTML('afterbegin', template(data));
 		},
 		hiden() {
-			css(el, { display: "none "});
+			css(el, { display: 'none ' });
 		},
 	};
 }
