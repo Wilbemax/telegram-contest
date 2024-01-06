@@ -21,14 +21,12 @@ export function tooltip(el, WIDHT) {
 			clear();
 			const { height, width } = el.getBoundingClientRect();
 			if (left < WIDHT / 2) {
-				console.log(true);
 				css(el, {
 					display: 'block',
 					top: top - height + 'px',
 					left: left + width / 2 + 'px',
 				});
 			} else {
-				console.log(false);
 				css(el, {
 					display: 'block',
 					top: top - height + 'px',

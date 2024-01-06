@@ -19,12 +19,55 @@ export function sliderChart(root, data, DPI_WIDTH) {
 	const $window = root.querySelector('[data-el="window"]');
 	const $right = root.querySelector('[data-el="right"]');
 
+	function mousedown(event) {
+		const type = event.target.dataset.type;
+		const dimensions = {
+			left: parseInt($window.style.left),
+			right: parseInt($window.style.right),
+			width: parseInt($window.style.width),
+		};
+
+		if (type === 'window') {
+			const startX = event.pageX;
+			document.onmousemove = (e) => {
+				const delta = startX - e.pageX;
+				if (delta === 0) return;
+
+				const left = dimensions.left - delta;
+				const rifht = WIDHT - left - dimensions.width;
+
+				setPosition(left, rifht);
+			};
+		} else if (type === 'left' || type === 'right') {
+			const startX = event.pageX;
+
+			document.onmousemove = (e) => {
+				const delta = startX - e.pageX;
+				if (delta === 0) return;
+
+				if (type === 'left') {
+					const left = WIDHT - (dimensions.width + delta) - dimensions.right;
+					setPosition(left, dimensions.right);
+				} else {
+					const right = WIDHT - (dimensions.width - delta) - dimensions.left;
+					setPosition(dimensions.left, right);
+				}
+			};
+		}
+	}
+
+	function mouseup() {
+		document.onmousemove = null;
+	}
+
+	root.addEventListener('mousedown', mousedown);
+	document.addEventListener('mouseup', mouseup);
+
 	const defaultWidth = WIDHT * 0.3;
 	setPosition(0, WIDHT - defaultWidth);
 
 	function setPosition(left, right) {
 		const windowWith = WIDHT - left - right;
-        console.log(left, right);
 
 		if (windowWith < MIN_WIDTH) {
 			css($window, { width: MIN_WIDTH + 'px' });
@@ -44,12 +87,12 @@ export function sliderChart(root, data, DPI_WIDTH) {
 		}
 
 		css($window, {
-            width: windowWith +"px",
-            left: left + "px",
-            rigth: right + "px"
-        })
+			width: windowWith + 'px',
+			left: left + 'px',
+			right: right + 'px',
+		});
 		css($left, { width: left + 'px' });
-        css($right, { width: right + 'px' });
+		css($right, { width: right + 'px' });
 	}
 
 	canvas.width = DPI_WIDTH;

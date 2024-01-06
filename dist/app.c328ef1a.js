@@ -324,14 +324,12 @@ function tooltip(el, WIDHT) {
         height = _el$getBoundingClient.height,
         width = _el$getBoundingClient.width;
       if (left < WIDHT / 2) {
-        console.log(true);
         (0, _util.css)(el, {
           display: 'block',
           top: top - height + 'px',
           left: left + width / 2 + 'px'
         });
       } else {
-        console.log(false);
         (0, _util.css)(el, {
           display: 'block',
           top: top - height + 'px',
@@ -375,11 +373,46 @@ function sliderChart(root, data, DPI_WIDTH) {
   var $left = root.querySelector('[data-el="left"]');
   var $window = root.querySelector('[data-el="window"]');
   var $right = root.querySelector('[data-el="right"]');
+  function mousedown(event) {
+    var type = event.target.dataset.type;
+    var dimensions = {
+      left: parseInt($window.style.left),
+      right: parseInt($window.style.right),
+      width: parseInt($window.style.width)
+    };
+    if (type === 'window') {
+      var startX = event.pageX;
+      document.onmousemove = function (e) {
+        var delta = startX - e.pageX;
+        if (delta === 0) return;
+        var left = dimensions.left - delta;
+        var rifht = WIDHT - left - dimensions.width;
+        setPosition(left, rifht);
+      };
+    } else if (type === 'left' || type === 'right') {
+      var _startX = event.pageX;
+      document.onmousemove = function (e) {
+        var delta = _startX - e.pageX;
+        if (delta === 0) return;
+        if (type === 'left') {
+          var left = WIDHT - (dimensions.width + delta) - dimensions.right;
+          setPosition(left, dimensions.right);
+        } else {
+          var right = WIDHT - (dimensions.width - delta) - dimensions.left;
+          setPosition(dimensions.left, right);
+        }
+      };
+    }
+  }
+  function mouseup() {
+    document.onmousemove = null;
+  }
+  root.addEventListener('mousedown', mousedown);
+  document.addEventListener('mouseup', mouseup);
   var defaultWidth = WIDHT * 0.3;
   setPosition(0, WIDHT - defaultWidth);
   function setPosition(left, right) {
     var windowWith = WIDHT - left - right;
-    console.log(left, right);
     if (windowWith < MIN_WIDTH) {
       (0, _util.css)($window, {
         width: MIN_WIDTH + 'px'
@@ -405,9 +438,9 @@ function sliderChart(root, data, DPI_WIDTH) {
       return;
     }
     (0, _util.css)($window, {
-      width: windowWith + "px",
-      left: left + "px",
-      rigth: right + "px"
+      width: windowWith + 'px',
+      left: left + 'px',
+      right: right + 'px'
     });
     (0, _util.css)($left, {
       width: left + 'px'
@@ -641,7 +674,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51679" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51284" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
