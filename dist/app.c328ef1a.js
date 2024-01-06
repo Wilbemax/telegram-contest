@@ -205,6 +205,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.circle = circle;
 exports.computeBoundaties = computeBoundaties;
+exports.computeXRatio = computeXRatio;
+exports.computeYRatio = computeYRatio;
 exports.css = css;
 exports.isOver = isOver;
 exports.line = line;
@@ -217,6 +219,12 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
+function computeYRatio(height, min, max) {
+  return (min - max) / height;
+}
+function computeXRatio(width, length) {
+  return width / (length - 2);
+}
 function toDate(timestamp) {
   var shortMonth = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   // const shortDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -289,10 +297,10 @@ function css(el) {
   var style = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
   Object.assign(el.style, style);
 }
-function toCoords(xRatio, yRatio, DPI_HEIGHT, PADDING) {
+function toCoords(xRatio, yRatio, DPI_HEIGHT, PADDING, yMin) {
   return function (col) {
     return col.map(function (y, i) {
-      return [Math.floor((i - 1) * xRatio), Math.floor(DPI_HEIGHT - PADDING - y * yRatio)];
+      return [Math.floor((i - 1) * xRatio), Math.floor(DPI_HEIGHT - PADDING - (y - yMin) / yRatio)];
     }).filter(function (_, i) {
       return i !== 0;
     });
@@ -353,17 +361,20 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.sliderChart = sliderChart;
 var _util = require("./util");
+var _data = require("./data");
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+function noop() {}
 var HEIGHT = 40;
 var DPI_HEIGHT = HEIGHT * 2;
 function sliderChart(root, data, DPI_WIDTH) {
   var WIDHT = DPI_WIDTH / 2;
   var MIN_WIDTH = WIDHT * 0.05;
+  var nextFn = noop;
   var canvas = root.querySelector('canvas');
   var ctx = canvas.getContext('2d');
   (0, _util.css)(canvas, {
@@ -373,6 +384,9 @@ function sliderChart(root, data, DPI_WIDTH) {
   var $left = root.querySelector('[data-el="left"]');
   var $window = root.querySelector('[data-el="window"]');
   var $right = root.querySelector('[data-el="right"]');
+  function next() {
+    nextFn(getPosition());
+  }
   function mousedown(event) {
     var type = event.target.dataset.type;
     var dimensions = {
@@ -388,6 +402,7 @@ function sliderChart(root, data, DPI_WIDTH) {
         var left = dimensions.left - delta;
         var rifht = WIDHT - left - dimensions.width;
         setPosition(left, rifht);
+        next();
       };
     } else if (type === 'left' || type === 'right') {
       var _startX = event.pageX;
@@ -401,6 +416,7 @@ function sliderChart(root, data, DPI_WIDTH) {
           var right = WIDHT - (dimensions.width - delta) - dimensions.left;
           setPosition(dimensions.left, right);
         }
+        next();
       };
     }
   }
@@ -449,25 +465,40 @@ function sliderChart(root, data, DPI_WIDTH) {
       width: right + 'px'
     });
   }
+  function getPosition() {
+    var left = parseInt($left.style.width);
+    var right = WIDHT - parseInt($right.style.width);
+    return [left * 100 / WIDHT, right * 100 / WIDHT];
+  }
   canvas.width = DPI_WIDTH;
   canvas.height = DPI_HEIGHT;
   var _computeBoundaties = (0, _util.computeBoundaties)(data),
     _computeBoundaties2 = _slicedToArray(_computeBoundaties, 2),
     yMin = _computeBoundaties2[0],
     yMax = _computeBoundaties2[1];
-  var yRatio = DPI_HEIGHT / (yMax - yMin);
-  var xRatio = DPI_WIDTH / (data.columns[0].length - 2);
+
+  // const yRatio = DPI_HEIGHT / (yMax - yMin);
+  // const xRatio = DPI_WIDTH / (data.columns[0].length - 2);
+
+  var yRatio = (0, _util.computeYRatio)(DPI_HEIGHT, yMax, yMin);
+  var xRatio = (0, _util.computeXRatio)(DPI_WIDTH, data.columns[0].length);
   var yData = data.columns.filter(function (col) {
     return data.types[col[0]] === 'line';
   });
-  yData.map((0, _util.toCoords)(xRatio, yRatio, DPI_HEIGHT, -5)).forEach(function (coords, idx) {
+  yData.map((0, _util.toCoords)(xRatio, yRatio, DPI_HEIGHT, 0, yMin)).forEach(function (coords, idx) {
     var color = data.colors[yData[idx][0]];
     (0, _util.line)(ctx, coords, {
       color: color
     });
   });
+  return {
+    subscribe: function subscribe(fn) {
+      nextFn = fn;
+      fn(getPosition());
+    }
+  };
 }
-},{"./util":"util.js"}],"chart.js":[function(require,module,exports) {
+},{"./util":"util.js","./data":"data.js"}],"chart.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -527,6 +558,9 @@ function chart(root, data) {
       }
     };
   }
+  slider.subscribe(function (pos) {
+    proxy.pos = pos;
+  });
   function mouseleave() {
     proxy.mouse = null;
     tip.hiden();
@@ -538,23 +572,39 @@ function chart(root, data) {
   }
   function paint() {
     clear();
-    var _computeBoundaties = (0, _util.computeBoundaties)(data),
+    var length = data.columns[0].length;
+    var leftIndex = Math.round(proxy.pos[0] * length / 100);
+    var rigthIndex = Math.round(proxy.pos[1] * length / 100);
+    var columns = data.columns.map(function (col) {
+      var res = col.slice(leftIndex, rigthIndex);
+      if (typeof res[0] !== 'string') {
+        res.unshift(col[0]);
+      }
+      return res;
+    });
+    var _computeBoundaties = (0, _util.computeBoundaties)({
+        columns: columns,
+        types: data.types
+      }),
       _computeBoundaties2 = _slicedToArray(_computeBoundaties, 2),
       yMin = _computeBoundaties2[0],
       yMax = _computeBoundaties2[1];
-    var yRatio = VIEW_HEIGHT / (yMax - yMin);
-    var xRatio = VIEW_WIDTH / (data.columns[0].length - 2);
-    var yData = data.columns.filter(function (col) {
+
+    // const yRatio = VIEW_HEIGHT / (yMax - yMin);
+    // const xRatio = VIEW_WIDTH / (columns[0].length - 2);
+    var yRatio = (0, _util.computeYRatio)(VIEW_HEIGHT, yMax, yMin);
+    var xRatio = (0, _util.computeXRatio)(VIEW_WIDTH, columns[0].length);
+    var yData = columns.filter(function (col) {
       return data.types[col[0]] === 'line';
     });
-    var xData = data.columns.filter(function (col) {
+    var xData = columns.filter(function (col) {
       return data.types[col[0]] !== 'line';
     })[0];
 
     //рисование
     yAxis(yMin, yMax);
     xAxis(xData, yData, xRatio);
-    yData.map((0, _util.toCoords)(xRatio, yRatio, DPI_HEIGHT, PADDING)).forEach(function (coords, idx) {
+    yData.map((0, _util.toCoords)(xRatio, yRatio, DPI_HEIGHT, PADDING, yMin)).forEach(function (coords, idx) {
       var color = data.colors[yData[idx][0]];
       (0, _util.line)(ctx, coords, {
         color: color
@@ -674,7 +724,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51284" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50954" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];

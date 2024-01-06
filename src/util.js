@@ -1,3 +1,10 @@
+export function computeYRatio(height, min, max) {
+	return (min - max) / height;
+}
+export function computeXRatio(width, length) {
+	return width / (length - 2);
+}
+
 export function toDate(timestamp) {
 	const shortMonth = [
 		'Jan',
@@ -73,18 +80,16 @@ export function computeBoundaties({ columns, types }) {
 	return [min, max];
 }
 
-
 export function css(el, style = {}) {
-	Object.assign(el.style, style)
+	Object.assign(el.style, style);
 }
 
-
-export function toCoords(xRatio, yRatio, DPI_HEIGHT, PADDING) {
+export function toCoords(xRatio, yRatio, DPI_HEIGHT, PADDING, yMin) {
 	return (col) =>
 		col
 			.map((y, i) => [
 				Math.floor((i - 1) * xRatio),
-				Math.floor(DPI_HEIGHT - PADDING - y * yRatio),
+				Math.floor(DPI_HEIGHT - PADDING - (y - yMin) / yRatio),
 			])
 			.filter((_, i) => i !== 0);
 }

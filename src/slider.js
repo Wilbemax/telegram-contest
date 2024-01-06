@@ -1,5 +1,8 @@
-import { css } from './util';
-import { computeBoundaties, toCoords, line } from './util';
+
+import {  computeXRatio, css, computeBoundaties, toCoords, line, computeYRatio } from './util';
+import { getChartData } from './data';
+
+function noop() { }
 
 const HEIGHT = 40;
 const DPI_HEIGHT = HEIGHT * 2;
@@ -7,6 +10,7 @@ const DPI_HEIGHT = HEIGHT * 2;
 export function sliderChart(root, data, DPI_WIDTH) {
 	const WIDHT = DPI_WIDTH / 2;
 	const MIN_WIDTH = WIDHT * 0.05;
+	let nextFn = noop;
 	const canvas = root.querySelector('canvas');
 	const ctx = canvas.getContext('2d');
 
@@ -18,6 +22,10 @@ export function sliderChart(root, data, DPI_WIDTH) {
 	const $left = root.querySelector('[data-el="left"]');
 	const $window = root.querySelector('[data-el="window"]');
 	const $right = root.querySelector('[data-el="right"]');
+
+	function next() {
+		nextFn(getPosition());
+	}
 
 	function mousedown(event) {
 		const type = event.target.dataset.type;
@@ -37,6 +45,7 @@ export function sliderChart(root, data, DPI_WIDTH) {
 				const rifht = WIDHT - left - dimensions.width;
 
 				setPosition(left, rifht);
+				next();
 			};
 		} else if (type === 'left' || type === 'right') {
 			const startX = event.pageX;
@@ -52,6 +61,7 @@ export function sliderChart(root, data, DPI_WIDTH) {
 					const right = WIDHT - (dimensions.width - delta) - dimensions.left;
 					setPosition(dimensions.left, right);
 				}
+				next();
 			};
 		}
 	}
@@ -95,18 +105,35 @@ export function sliderChart(root, data, DPI_WIDTH) {
 		css($right, { width: right + 'px' });
 	}
 
+	function getPosition() {
+		const left = parseInt($left.style.width);
+		const right = WIDHT - parseInt($right.style.width);
+		return [(left * 100) / WIDHT, (right * 100) / WIDHT];
+	}
+
 	canvas.width = DPI_WIDTH;
 	canvas.height = DPI_HEIGHT;
 
 	const [yMin, yMax] = computeBoundaties(data);
 
-	const yRatio = DPI_HEIGHT / (yMax - yMin);
-	const xRatio = DPI_WIDTH / (data.columns[0].length - 2);
+	// const yRatio = DPI_HEIGHT / (yMax - yMin);
+	// const xRatio = DPI_WIDTH / (data.columns[0].length - 2);
+
+	const yRatio = computeYRatio(DPI_HEIGHT, yMax, yMin)
+	const xRatio = computeXRatio(DPI_WIDTH, data.columns[0].length)
+
 
 	const yData = data.columns.filter((col) => data.types[col[0]] === 'line');
 
-	yData.map(toCoords(xRatio, yRatio, DPI_HEIGHT, -5)).forEach((coords, idx) => {
+	yData.map(toCoords(xRatio, yRatio, DPI_HEIGHT, 0, yMin)).forEach((coords, idx) => {
 		const color = data.colors[yData[idx][0]];
 		line(ctx, coords, { color });
 	});
+
+	return {
+		subscribe(fn) {
+			nextFn = fn
+			fn(getPosition());
+		},
+	};
 }

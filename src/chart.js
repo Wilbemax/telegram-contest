@@ -1,4 +1,14 @@
-import { css, toDate, isOver, line, circle, computeBoundaties, toCoords } from './util';
+import {
+	css,
+	toDate,
+	isOver,
+	line,
+	circle,
+	computeBoundaties,
+	toCoords,
+	computeXRatio,
+	computeYRatio
+} from './util';
 import { tooltip } from './tooltip';
 import { sliderChart } from './slider';
 
@@ -16,7 +26,11 @@ export function chart(root, data) {
 	//console.log(data);
 	const canvas = root.querySelector('[data-el="main"');
 	const tip = tooltip(root.querySelector('[data-el="tooltip"]'), WIDHT);
-	const slider = sliderChart(root.querySelector('[data-el="slider"]'), data, DPI_WIDTH)
+	const slider = sliderChart(
+		root.querySelector('[data-el="slider"]'),
+		data,
+		DPI_WIDTH
+	);
 	let raf;
 	const ctx = canvas.getContext('2d');
 
@@ -51,6 +65,10 @@ export function chart(root, data) {
 		};
 	}
 
+	slider.subscribe((pos) => {
+		proxy.pos = pos;
+	});
+
 	function mouseleave() {
 		proxy.mouse = null;
 		tip.hiden();
@@ -65,30 +83,44 @@ export function chart(root, data) {
 
 	function paint() {
 		clear();
-		const [yMin, yMax] = computeBoundaties(data);
+		const length = data.columns[0].length;
+		const leftIndex = Math.round((proxy.pos[0] * length) / 100);
+		const rigthIndex = Math.round((proxy.pos[1] * length) / 100);
 
-		const yRatio = VIEW_HEIGHT / (yMax - yMin);
-		const xRatio = VIEW_WIDTH / (data.columns[0].length - 2);
+		const columns = data.columns.map((col) => {
+			const res = col.slice(leftIndex, rigthIndex);
+			if (typeof res[0] !== 'string') {
+				res.unshift(col[0]);
+			}
+			return res;
+		});
 
-		const yData = data.columns.filter((col) => data.types[col[0]] === 'line');
-		const xData = data.columns.filter(
-			(col) => data.types[col[0]] !== 'line'
-		)[0];
+		const [yMin, yMax] = computeBoundaties({ columns, types: data.types });
+
+		// const yRatio = VIEW_HEIGHT / (yMax - yMin);
+		// const xRatio = VIEW_WIDTH / (columns[0].length - 2);
+		const yRatio = computeYRatio(VIEW_HEIGHT, yMax, yMin);
+		const xRatio = computeXRatio(VIEW_WIDTH, columns[0].length);
+
+		const yData = columns.filter((col) => data.types[col[0]] === 'line');
+		const xData = columns.filter((col) => data.types[col[0]] !== 'line')[0];
 
 		//рисование
 		yAxis(yMin, yMax);
 		xAxis(xData, yData, xRatio);
 
-		yData.map(toCoords(xRatio, yRatio, DPI_HEIGHT, PADDING)).forEach((coords, idx) => {
-			const color = data.colors[yData[idx][0]];
-			line(ctx, coords, { color });
+		yData
+			.map(toCoords(xRatio, yRatio, DPI_HEIGHT, PADDING, yMin))
+			.forEach((coords, idx) => {
+				const color = data.colors[yData[idx][0]];
+				line(ctx, coords, { color });
 
-			for (const [x, y] of coords) {
-				if (isOver(proxy.mouse, x, coords.length, DPI_WIDTH)) {
-					circle(ctx, [x, y], { color }, CIRCLE_RADIUS);
+				for (const [x, y] of coords) {
+					if (isOver(proxy.mouse, x, coords.length, DPI_WIDTH)) {
+						circle(ctx, [x, y], { color }, CIRCLE_RADIUS);
+					}
 				}
-			}
-		});
+			});
 	}
 
 	function xAxis(xData, yData, xRatio) {
@@ -157,4 +189,3 @@ export function chart(root, data) {
 		},
 	};
 }
-
