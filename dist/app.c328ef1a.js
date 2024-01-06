@@ -241,6 +241,8 @@ function isOver(mouse, x, length, dWidth) {
 function line(ctx, coords, _ref) {
   var color = _ref.color;
   ctx.beginPath();
+  ctx.save();
+  //ctx.translate(translate, 0)
   ctx.lineWidth = 4;
   ctx.strokeStyle = color;
   var _iterator = _createForOfIteratorHelper(coords),
@@ -258,6 +260,7 @@ function line(ctx, coords, _ref) {
     _iterator.f();
   }
   ctx.stroke();
+  ctx.restore();
   ctx.closePath();
 }
 function circle(ctx, _ref2, _ref3, cRadius) {
@@ -524,12 +527,14 @@ var VIEW_HEIGHT = DPI_HEIGHT - PADDING * 2;
 var ROWS_COUNT = 5;
 var VIEW_WIDTH = DPI_WIDTH;
 var CIRCLE_RADIUS = 10;
+var SPEED = 2500;
 function chart(root, data) {
   //console.log(data);
   var canvas = root.querySelector('[data-el="main"');
   var tip = (0, _tooltip.tooltip)(root.querySelector('[data-el="tooltip"]'), WIDHT);
   var slider = (0, _slider.sliderChart)(root.querySelector('[data-el="slider"]'), data, DPI_WIDTH);
   var raf;
+  var prevMax;
   var ctx = canvas.getContext('2d');
   (0, _util.css)(canvas, {
     width: WIDHT + 'px',
@@ -570,6 +575,21 @@ function chart(root, data) {
   function clear() {
     ctx.clearRect(0, 0, DPI_WIDTH, DPI_HEIGHT);
   }
+  function getMax(yMax) {
+    var step = (yMax - prevMax) / SPEED;
+    if (proxy.max < yMax) {
+      proxy.max += step;
+    } else if (proxy.max > yMax) {
+      proxy.max = yMax;
+      prevMax = yMax;
+    }
+    return proxy.max;
+  }
+
+  // function translateX(lenhtg, xRatio, left) {
+  // 	return -1 * Math.round((left* xRatio * lenhtg ) / 100);
+  // }
+
   function paint() {
     clear();
     var length = data.columns[0].length;
@@ -589,10 +609,15 @@ function chart(root, data) {
       _computeBoundaties2 = _slicedToArray(_computeBoundaties, 2),
       yMin = _computeBoundaties2[0],
       yMax = _computeBoundaties2[1];
+    if (!prevMax) {
+      prevMax = yMax;
+      proxy.max = yMax;
+    }
+    var max = getMax(yMax);
 
     // const yRatio = VIEW_HEIGHT / (yMax - yMin);
     // const xRatio = VIEW_WIDTH / (columns[0].length - 2);
-    var yRatio = (0, _util.computeYRatio)(VIEW_HEIGHT, yMax, yMin);
+    var yRatio = (0, _util.computeYRatio)(VIEW_HEIGHT, max, yMin);
     var xRatio = (0, _util.computeXRatio)(VIEW_WIDTH, columns[0].length);
     var yData = columns.filter(function (col) {
       return data.types[col[0]] === 'line';
@@ -600,9 +625,10 @@ function chart(root, data) {
     var xData = columns.filter(function (col) {
       return data.types[col[0]] !== 'line';
     })[0];
-
+    console.log(columns);
+    console.log(data.columns);
     //рисование
-    yAxis(yMin, yMax);
+    yAxis(yMin, max);
     xAxis(xData, yData, xRatio);
     yData.map((0, _util.toCoords)(xRatio, yRatio, DPI_HEIGHT, PADDING, yMin)).forEach(function (coords, idx) {
       var color = data.colors[yData[idx][0]];

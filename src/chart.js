@@ -7,7 +7,7 @@ import {
 	computeBoundaties,
 	toCoords,
 	computeXRatio,
-	computeYRatio
+	computeYRatio,
 } from './util';
 import { tooltip } from './tooltip';
 import { sliderChart } from './slider';
@@ -21,6 +21,7 @@ const VIEW_HEIGHT = DPI_HEIGHT - PADDING * 2;
 const ROWS_COUNT = 5;
 const VIEW_WIDTH = DPI_WIDTH;
 const CIRCLE_RADIUS = 10;
+const SPEED = 2500;
 
 export function chart(root, data) {
 	//console.log(data);
@@ -32,6 +33,7 @@ export function chart(root, data) {
 		DPI_WIDTH
 	);
 	let raf;
+	let prevMax;
 	const ctx = canvas.getContext('2d');
 
 	css(canvas, {
@@ -81,6 +83,23 @@ export function chart(root, data) {
 		ctx.clearRect(0, 0, DPI_WIDTH, DPI_HEIGHT);
 	}
 
+	function getMax(yMax) {
+		const step = (yMax - prevMax) / SPEED;
+
+		if (proxy.max < yMax) {
+			proxy.max += step;
+		} else if (proxy.max > yMax) {
+			proxy.max = yMax;
+			prevMax = yMax;
+		}
+
+		return proxy.max;
+	}
+
+	// function translateX(lenhtg, xRatio, left) {
+	// 	return -1 * Math.round((left* xRatio * lenhtg ) / 100);
+	// }
+
 	function paint() {
 		clear();
 		const length = data.columns[0].length;
@@ -97,16 +116,24 @@ export function chart(root, data) {
 
 		const [yMin, yMax] = computeBoundaties({ columns, types: data.types });
 
+		if (!prevMax){
+			prevMax =  yMax
+			proxy.max = yMax
+		}
+		const max = getMax(yMax)
+
+
 		// const yRatio = VIEW_HEIGHT / (yMax - yMin);
 		// const xRatio = VIEW_WIDTH / (columns[0].length - 2);
-		const yRatio = computeYRatio(VIEW_HEIGHT, yMax, yMin);
+		const yRatio = computeYRatio(VIEW_HEIGHT, max, yMin);
 		const xRatio = computeXRatio(VIEW_WIDTH, columns[0].length);
 
 		const yData = columns.filter((col) => data.types[col[0]] === 'line');
 		const xData = columns.filter((col) => data.types[col[0]] !== 'line')[0];
-
+		console.log(columns);
+		console.log( data.columns);
 		//рисование
-		yAxis(yMin, yMax);
+		yAxis(yMin, max);
 		xAxis(xData, yData, xRatio);
 
 		yData
@@ -122,6 +149,7 @@ export function chart(root, data) {
 				}
 			});
 	}
+
 
 	function xAxis(xData, yData, xRatio) {
 		const colsCount = 6;
