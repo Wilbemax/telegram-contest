@@ -123,8 +123,7 @@ export function chart(root, data) {
 		const max = getMax(yMax)
 
 
-		// const yRatio = VIEW_HEIGHT / (yMax - yMin);
-		// const xRatio = VIEW_WIDTH / (columns[0].length - 2);
+		
 		const yRatio = computeYRatio(VIEW_HEIGHT, max, yMin);
 		const xRatio = computeXRatio(VIEW_WIDTH, columns[0].length);
 

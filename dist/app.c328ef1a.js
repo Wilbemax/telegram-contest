@@ -614,9 +614,6 @@ function chart(root, data) {
       proxy.max = yMax;
     }
     var max = getMax(yMax);
-
-    // const yRatio = VIEW_HEIGHT / (yMax - yMin);
-    // const xRatio = VIEW_WIDTH / (columns[0].length - 2);
     var yRatio = (0, _util.computeYRatio)(VIEW_HEIGHT, max, yMin);
     var xRatio = (0, _util.computeXRatio)(VIEW_WIDTH, columns[0].length);
     var yData = columns.filter(function (col) {
@@ -750,7 +747,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50954" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53322" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
