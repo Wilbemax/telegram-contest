@@ -30,7 +30,7 @@ export function tooltip(el, WIDHT) {
 				css(el, {
 					display: 'block',
 					top: top - height + 'px',
-					left: left - width * 1.5 + 'px',
+					left: left - width * 2 + 'px',
 				});
 			}
 

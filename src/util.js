@@ -35,10 +35,10 @@ export function isOver(mouse, x, length, dWidth) {
 	return Math.abs(x - mouse.x) < width / 2;
 }
 
-export function line(ctx, coords, { color }) {
+export function line(ctx, coords, { color, translate }) {
 	ctx.beginPath();
 	ctx.save()
-	//ctx.translate(translate, 0)
+	ctx.translate(translate, 0)
 	ctx.lineWidth = 4;
 	ctx.strokeStyle = color;
 	for (const [x, y] of coords) {

@@ -21,7 +21,7 @@ const VIEW_HEIGHT = DPI_HEIGHT - PADDING * 2;
 const ROWS_COUNT = 5;
 const VIEW_WIDTH = DPI_WIDTH;
 const CIRCLE_RADIUS = 10;
-const SPEED = 2500;
+const SPEED = 2000;
 
 export function chart(root, data) {
 	//console.log(data);
@@ -89,25 +89,27 @@ export function chart(root, data) {
 		if (proxy.max < yMax) {
 			proxy.max += step;
 		} else if (proxy.max > yMax) {
-			proxy.max = yMax;
-			prevMax = yMax;
+			proxy.max -= step;
+			// Добавлено условие, чтобы предотвратить падение proxy.max ниже нуля
+			if (proxy.max < 0) {
+				proxy.max = 0;
+			}
 		}
-
 		return proxy.max;
 	}
 
-	// function translateX(lenhtg, xRatio, left) {
-	// 	return -1 * Math.round((left* xRatio * lenhtg ) / 100);
-	// }
+	function translateX(lenhtg, xRatio, left) {
+		return -1 * Math.round((left * xRatio * lenhtg) / 100);
+	}
 
 	function paint() {
 		clear();
 		const length = data.columns[0].length;
-		const leftIndex = Math.round((proxy.pos[0] * length) / 100);
-		const rigthIndex = Math.round((proxy.pos[1] * length) / 100);
+		const leftIndex = Math.max(Math.min(Math.round((proxy.pos[0] * length) / 100), length - 1), 0);
+const rightIndex = Math.max(Math.min(Math.round((proxy.pos[1] * length) / 100), length - 1), 0);
 
 		const columns = data.columns.map((col) => {
-			const res = col.slice(leftIndex, rigthIndex);
+			const res = col.slice(leftIndex, rightIndex	);
 			if (typeof res[0] !== 'string') {
 				res.unshift(col[0]);
 			}
@@ -116,21 +118,20 @@ export function chart(root, data) {
 
 		const [yMin, yMax] = computeBoundaties({ columns, types: data.types });
 
-		if (!prevMax){
-			prevMax =  yMax
-			proxy.max = yMax
+		if (!prevMax) {
+			prevMax = yMax;
+			proxy.max = yMax;
 		}
-		const max = getMax(yMax)
+		const max = getMax(yMax);
+		const trnaslate = translateX(data.columns[0].length, xRatio, proxy.pos[0]);
+		console.log(`max: ${proxy.max}`, `yMax: ${yMax}`, `prevMax: ${prevMax}`);
 
-
-		
 		const yRatio = computeYRatio(VIEW_HEIGHT, max, yMin);
 		const xRatio = computeXRatio(VIEW_WIDTH, columns[0].length);
 
 		const yData = columns.filter((col) => data.types[col[0]] === 'line');
 		const xData = columns.filter((col) => data.types[col[0]] !== 'line')[0];
-		console.log(columns);
-		console.log( data.columns);
+
 		//рисование
 		yAxis(yMin, max);
 		xAxis(xData, yData, xRatio);
@@ -139,7 +140,7 @@ export function chart(root, data) {
 			.map(toCoords(xRatio, yRatio, DPI_HEIGHT, PADDING, yMin))
 			.forEach((coords, idx) => {
 				const color = data.colors[yData[idx][0]];
-				line(ctx, coords, { color });
+				line(ctx, coords, { color, trnaslate });
 
 				for (const [x, y] of coords) {
 					if (isOver(proxy.mouse, x, coords.length, DPI_WIDTH)) {
@@ -148,7 +149,6 @@ export function chart(root, data) {
 				}
 			});
 	}
-
 
 	function xAxis(xData, yData, xRatio) {
 		const colsCount = 6;
