@@ -12,7 +12,7 @@
 
 body {
   font-family: sans-serif;
-  background: #666;
+  background: #fff;;
 }
 
 .container {
@@ -178,7 +178,7 @@ body {
       animation-delay: 250ms;
       animation-timing-function: cubic-bezier(0.4, 0, 0.23, 1);
       animation-fill-mode: forwards;
-      //animation: checkbox-check 125ms 250ms cubic-bezier(.4, .0, .23, 1) forwards;
+      animation: checkbox-check 125ms 250ms cubic-bezier(.4, .0, .23, 1) forwards;
     }
   }
 

@@ -12,6 +12,8 @@ import {
 import { tooltip } from './tooltip';
 import { sliderChart } from './slider';
 
+let lastPaintCall;
+
 const WIDHT = 600;
 const PADDING = 40;
 const HEIGHT = 200;
@@ -20,8 +22,8 @@ const DPI_HEIGHT = HEIGHT * 2;
 const VIEW_HEIGHT = DPI_HEIGHT - PADDING * 2;
 const ROWS_COUNT = 5;
 const VIEW_WIDTH = DPI_WIDTH;
-const CIRCLE_RADIUS = 8;
-const SPEED = 500;
+const CIRCLE_RADIUS = 10;
+const SPEED = 1000;
 
 export function chart(root, data) {
 	//console.log(data);
@@ -50,7 +52,6 @@ export function chart(root, data) {
 			set(...args) {
 				const result = Reflect.set(...args);
 				raf = requestAnimationFrame(paint);
-				console.log('raf' + result);
 				return result;
 			},
 		}
@@ -84,54 +85,70 @@ export function chart(root, data) {
 		ctx.clearRect(0, 0, DPI_WIDTH, DPI_HEIGHT);
 	}
 
+
+	//проблема в функции getMax, здесь я пытаюсь отрисовывать так чтобы была какя-то анимцмя, на увелечении работает нормально, да и на уменьшении тоже все хорошо до момента когда график становиться меньше чем default там начинаеться какая-то ваканалия, продебажил ничегоне понимаю почему так получаеться...
+
+
 	function getMax(yMax) {
-		const step = ((yMax - prevMax) / SPEED);
 
-		if (proxy.max < yMax) {
-			if (Math.round(proxy.max, 2) == yMax) {
-				proxy.max = yMax;
-				console.log('true 1');
-			} else {
-				proxy.max += step;
-			}
-
-			
-		} else if (proxy.max > yMax) {
-			
-			if (Math.round(proxy.max, 2) == yMax) {
-				console.log('true 2');
-				proxy.max = yMax;
-			} else {
-				if (proxy.max < 0) {
-					proxy.max = 0;
-				}
-				proxy.max += step;
-				prevMax = proxy.max
-			}
+		const diff = yMax - proxy.max;
+	  
+		if(proxy.max === 0 && diff < 0) {
+		  return 0;
 		}
-		console.log(`max: ${proxy.max}`, `yMax: ${yMax}`, `prevMax: ${prevMax}` , `step: ${step}`);
-
+	  
+		const step = diff / SPEED ; 
+	  
+		if(proxy.max < yMax) {
+		  proxy.max += step;
+		} else {
+		  proxy.max -= step; 
+		}
+	  
 		return proxy.max;
-	}
+	  
+	  }
 
 	function translateX(lenhtg, xRatio, left) {
 		return -1 * Math.round((left * xRatio * lenhtg) / 100);
 	}
 
+	let throttledPaint = throttle(paint, 16);
+
+  function loop() {
+    throttledPaint();
+    requestAnimationFrame(loop);
+  }
+
+
+function throttle(fn, delay) {
+  let lastCall = 0;
+  return function(...args) {
+    const now = Date.now();
+    if (now - lastCall < delay) {
+      return;
+    }
+    lastCall = now;
+    return fn(...args);
+  }
+}
+
 	function paint() {
+
+	const now = Date.now();
+
+    if (lastPaintCall && now - lastPaintCall < 16) {
+      return;
+    }
+
+    lastPaintCall = now;
 		clear();
 		const length = data.columns[0].length;
-		const leftIndex = Math.max(
-			Math.min(Math.round((proxy.pos[0] * length) / 100), length - 1),
-			0
-		);
-		const rightIndex = Math.max(
-			Math.min(Math.round((proxy.pos[1] * length) / 100), length - 1),
-			0
-		);
+		const leftIndex = Math.max(Math.min(Math.round((proxy.pos[0] * length) / 100), length - 1), 0);
+const rightIndex = Math.max(Math.min(Math.round((proxy.pos[1] * length) / 100), length - 1), 0);
 
 		const columns = data.columns.map((col) => {
-			const res = col.slice(leftIndex, rightIndex);
+			const res = col.slice(leftIndex, rightIndex	);
 			if (typeof res[0] !== 'string') {
 				res.unshift(col[0]);
 			}
@@ -145,11 +162,11 @@ export function chart(root, data) {
 			proxy.max = yMax;
 		}
 		const max = getMax(yMax);
+		const trnaslate = translateX(data.columns[0].length, xRatio, proxy.pos[0]);
+		console.log(`max: ${proxy.max}`, `yMax: ${yMax}`, `prevMax: ${prevMax}`);
 
 		const yRatio = computeYRatio(VIEW_HEIGHT, max, yMin);
 		const xRatio = computeXRatio(VIEW_WIDTH, columns[0].length);
-
-		const trnaslate = translateX(data.columns[0].length, xRatio, proxy.pos[0]);
 
 		const yData = columns.filter((col) => data.types[col[0]] === 'line');
 		const xData = columns.filter((col) => data.types[col[0]] !== 'line')[0];
@@ -237,4 +254,14 @@ export function chart(root, data) {
 			canvas.removeEventListener('mouseleave', mouseleave);
 		},
 	};
+
+
+	// return {
+	// 	init() {
+	// 	  loop();
+	// 	},
+	// 	destroy() {
+	// 	  //
+	// 	}
+	//   };
 }

@@ -1,6 +1,5 @@
 
 import {  computeXRatio, css, computeBoundaties, toCoords, line, computeYRatio } from './util';
-import { getChartData } from './data';
 
 function noop() { }
 
@@ -116,8 +115,7 @@ export function sliderChart(root, data, DPI_WIDTH) {
 
 	const [yMin, yMax] = computeBoundaties(data);
 
-	// const yRatio = DPI_HEIGHT / (yMax - yMin);
-	// const xRatio = DPI_WIDTH / (data.columns[0].length - 2);
+	
 
 	const yRatio = computeYRatio(DPI_HEIGHT, yMax, yMin)
 	const xRatio = computeXRatio(DPI_WIDTH, data.columns[0].length)
