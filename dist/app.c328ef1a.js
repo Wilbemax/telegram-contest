@@ -581,7 +581,7 @@ var VIEW_HEIGHT = DPI_HEIGHT - PADDING * 2;
 var ROWS_COUNT = 5;
 var VIEW_WIDTH = DPI_WIDTH;
 var CIRCLE_RADIUS = 8;
-var SPEED = 500;
+var SPEED = 300;
 function chart(root, data) {
   //console.log(data);
   var canvas = root.querySelector('[data-el="main"');
@@ -817,7 +817,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56621" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55680" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];

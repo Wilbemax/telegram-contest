@@ -21,7 +21,7 @@ const VIEW_HEIGHT = DPI_HEIGHT - PADDING * 2;
 const ROWS_COUNT = 5;
 const VIEW_WIDTH = DPI_WIDTH;
 const CIRCLE_RADIUS = 8;
-const SPEED = 500;
+const SPEED = 300;
 
 export function chart(root, data) {
 	//console.log(data);
