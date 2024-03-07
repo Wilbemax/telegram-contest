@@ -790,7 +790,7 @@ var _data = _interopRequireDefault(require("./data.json"));
 var _chart = require("./chart");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 //есть разные data[0]; data[1]; data[2]; data[3]
-var tgChart = (0, _chart.chart)(document.getElementById('chart'), _data.default[0]);
+var tgChart = (0, _chart.chart)(document.getElementById('chart'), _data.default[4]);
 tgChart.init();
 },{"./styles.scss":"styles.scss","./data.json":"data.json","./chart":"chart.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
