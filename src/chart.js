@@ -24,7 +24,6 @@ const CIRCLE_RADIUS = 8;
 const SPEED = 300;
 
 export function chart(root, data) {
-	//console.log(data);
 	const canvas = root.querySelector('[data-el="main"');
 	const tip = tooltip(root.querySelector('[data-el="tooltip"]'), WIDHT);
 	const slider = sliderChart(
@@ -109,7 +108,6 @@ export function chart(root, data) {
 				prevMax = proxy.max
 			}
 		}
-		console.log(`max: ${proxy.max}`, `yMax: ${yMax}`, `prevMax: ${prevMax}` , `step: ${step}`);
 
 		return proxy.max;
 	}

@@ -583,7 +583,6 @@ var VIEW_WIDTH = DPI_WIDTH;
 var CIRCLE_RADIUS = 8;
 var SPEED = 300;
 function chart(root, data) {
-  //console.log(data);
   var canvas = root.querySelector('[data-el="main"');
   var tip = (0, _tooltip.tooltip)(root.querySelector('[data-el="tooltip"]'), WIDHT);
   var slider = (0, _slider.sliderChart)(root.querySelector('[data-el="slider"]'), data, DPI_WIDTH);
@@ -651,7 +650,6 @@ function chart(root, data) {
         prevMax = proxy.max;
       }
     }
-    console.log("max: ".concat(proxy.max), "yMax: ".concat(yMax), "prevMax: ".concat(prevMax), "step: ".concat(step));
     return proxy.max;
   }
   function translateX(lenhtg, xRatio, left) {
@@ -817,7 +815,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55680" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55474" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
