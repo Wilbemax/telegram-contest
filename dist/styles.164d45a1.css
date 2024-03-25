@@ -178,6 +178,12 @@ body {
   animation-duration: 1.3s;
 }
 
+select option {
+  background: #fff;
+  font-family: inherit;
+  border: 0.5px solid #ddeaf3;
+}
+
 @keyframes pulse {
   0% {
     box-shadow: 0 0 0 0 rgb(230, 236, 240);

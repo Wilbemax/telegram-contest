@@ -787,9 +787,25 @@ require("./styles.scss");
 var _data = _interopRequireDefault(require("./data.json"));
 var _chart = require("./chart");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-//есть разные data[0]; data[1]; data[2]; data[3]
-var tgChart = (0, _chart.chart)(document.getElementById('chart'), _data.default[4]);
-tgChart.init();
+document.addEventListener('DOMContentLoaded', function () {
+  var graphSelect = document.getElementById('graphSelect');
+  var chartContainer = document.getElementById('chart');
+  console.log(graphSelect.value);
+  graphSelect.addEventListener('change', function () {
+    var selectedGraphIndex = graphSelect.value;
+    if (selectedGraphIndex !== '') {
+      console.log('f');
+      var selectedData = _data.default[selectedGraphIndex];
+      var tgChart = (0, _chart.chart)(chartContainer, selectedData);
+      tgChart.init();
+    } else {
+      console.log('t');
+      var _selectedData = _data.default[0];
+      var _tgChart = (0, _chart.chart)(chartContainer, _selectedData);
+      _tgChart.init();
+    }
+  });
+});
 },{"./styles.scss":"styles.scss","./data.json":"data.json","./chart":"chart.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
@@ -815,7 +831,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55474" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61199" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];

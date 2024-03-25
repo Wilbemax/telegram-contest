@@ -1,7 +1,24 @@
-import './styles.scss'
-import  data from './data.json';
+import './styles.scss';
+import data from './data.json';
 import { chart } from './chart';
-//есть разные data[0]; data[1]; data[2]; data[3]
-const tgChart = chart(document.getElementById('chart'), data[4]);
-tgChart.init();
 
+document.addEventListener('DOMContentLoaded', () => {
+	const graphSelect = document.getElementById('graphSelect');
+	const chartContainer = document.getElementById('chart');
+	console.log(graphSelect.value);
+	graphSelect.addEventListener('change', () => {
+		const selectedGraphIndex = graphSelect.value;
+
+		if (selectedGraphIndex !== '') {
+			console.log('f');
+			const selectedData = data[selectedGraphIndex];
+			const tgChart = chart(chartContainer, selectedData);
+			tgChart.init();
+		} else {
+			console.log('t');
+			const selectedData = data[0];
+			const tgChart = chart(chartContainer, selectedData);
+			tgChart.init();
+		}
+	});
+});
